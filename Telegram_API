@@ -1,0 +1,128 @@
+const { exec } = require("child_process")
+
+module.exports.sendSticker = async ({ token, telegram_id, sticker, reply_to_message_id }) => {
+  let url = `https://api.telegram.org/bot${token}/sendSticker`
+  let body = {
+    sticker, reply_to_message_id, 
+    chat_id: telegram_id
+  }
+
+  body = JSON.stringify(body).replace(/\\"/g, '"')
+  exec(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${body}' `, function(error, stdout, stderr){
+    if(error){ 
+      console.log("ERROR", error, stderr)
+    }else{
+      // console.log(stdout)
+    }
+  })
+}
+module.exports.sendMessage = ({ token, telegram_id, text, reply_to_message_id, reply_markup }) => {
+  let url = `https://api.telegram.org/bot${token}/sendMessage`
+  let body = { 
+    text,
+    chat_id: telegram_id,
+    parse_mode: "HTML"
+  }
+  if(reply_to_message_id) body.reply_to_message_id = reply_to_message_id
+  if(reply_markup) body.reply_markup = reply_markup
+  
+  body = JSON.stringify(body).replace(/\\"/g, '"')
+  exec(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${body}' `, function(error, stdout, stderr){
+    if(error){ 
+      console.log("ERROR", error, stderr)
+    }else{
+      // console.log(stdout)
+    }
+  })
+}
+module.exports.sendPhoto = async ({ token, telegram_id, photo, reply_to_message_id, caption }) => {
+  let url = `https://api.telegram.org/bot${token}/sendPhoto`
+  let input = {
+    photo, reply_to_message_id,
+    chat_id: telegram_id
+  }
+  if(caption) input.caption = caption
+  
+  input = JSON.stringify(input).replace(/\\"/g, '"')
+  exec(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${input}' `, function(error, stdout, stderr){
+    if(error){ 
+      console.log("ERROR", error, stderr)
+    }else{
+      // console.log(stdout)
+    }
+  })
+}
+module.exports.forwardMessage = async ({ token, telegram_id, from_telegram_id, disable_notification, message_id }) => {
+  let url = `https://api.telegram.org/bot${token}/forwardMessage`
+  let input = {
+    message_id,
+    chat_id: telegram_id,
+    from_chat_id: from_telegram_id
+  }
+  if(disable_notification){ input.disable_notification = true }
+  
+  input = JSON.stringify(input).replace(/\\"/g, '"')
+  exec(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${input}' `, function(error, stdout, stderr){
+    if(error){ 
+      console.log("ERROR", error, stderr)
+    }else{
+      // console.log(stdout)
+    }
+  })
+}
+module.exports.editMessageText = ({ token, telegram_id, message_id, text, reply_markup }) => {
+  let url = `https://api.telegram.org/bot${token}/editMessageText`
+  let input = {
+    chat_id: telegram_id,
+    message_id, text,
+    reply_markup,
+    parse_mode: "HTML"
+  }
+
+  input = JSON.stringify(input).replace(/\\"/g, '"')
+  // console.log(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${input}'`)
+  exec(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${input}'`, function(error, stdout, stderr){
+    if(error){ 
+      console.log("ERROR", error, stderr)
+    }else{
+      // console.log(stdout)
+    }
+  })
+}
+module.exports.copyMessage = async ({ token, from_telegram_id, telegram_id, message_id }) => {
+  let url = `https://api.telegram.org/bot${token}/copyMessage`
+  let input = {
+    message_id,
+    chat_id: telegram_id, 
+    from_chat_id: from_telegram_id 
+  }
+
+  input = JSON.stringify(input).replace(/\\"/g, '"')
+  exec(`curl -X POST '${url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${input}' `, function(error, stdout, stderr){
+    if(error){ 
+      console.log("ERROR", error, stderr)
+    }else{
+      // console.log(stdout)
+    }
+  })
+}
+module.exports.getFile = async ({ token, file_id }) => {
+  return new Promise((response, reject) => {
+    // Step1: get file token
+    let token_url = `https://api.telegram.org/bot${token}/getFile`
+    let token_input = { file_id }  
+    token_input = JSON.stringify(token_input).replace(/\\"/g, '"')
+    exec(`curl -X POST '${token_url}' -H 'accept: application/json' -H 'Content-Type: application/json' -d '${token_input}' `, function(token_error, token_stdout, token_stderr){
+      if(token_error){ 
+        console.log("ERROR", token_error, token_stdout)
+        reject({ error: token_error })
+      }else{
+        // Step2: Get file url
+        token_stdout = JSON.parse(token_stdout)
+        let { file_path } = token_stdout.result
+        let byte_url = `https://api.telegram.org/file/bot${token}/${file_path}`
+        response(byte_url)
+      }
+    })
+  })
+}
